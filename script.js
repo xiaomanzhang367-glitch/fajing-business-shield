@@ -535,3 +535,4 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('法镜·商盾广告合规检测平台已加载完成 - 最终版本');
     console.log(`本地词库: ${totalWords}条法规禁用词`);
 });
+
