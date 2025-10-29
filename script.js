@@ -178,18 +178,18 @@ detectBtn.addEventListener('click', function() {
     addHighlightEvents();
 });
 
-// 执行检测
+// 执行检测 - 修复HTML显示问题
 function performDetection(content) {
     let processedContent = content;
     let counts = { a: 0, b: 0, c: 0 };
     let detectedTypes = [];
     
-    // 检测A级违规
+    // 检测A级违规 - 修复HTML属性显示问题
     violations.aLevel.forEach(item => {
         if (content.includes(item.word) && !qualifiedWords.has(item.word)) {
             const regex = new RegExp(escapeRegExp(item.word), 'g');
             processedContent = processedContent.replace(regex, 
-                `<span class="highlight highlight-a" data-word="${item.word}" data-desc="${item.desc}" data-type="${item.type}">${item.word}</span>`);
+                `<span class="highlight highlight-a" data-word="${escapeHtml(item.word)}" data-desc="${escapeHtml(item.desc)}" data-type="${escapeHtml(item.type)}">${item.word}</span>`);
             counts.a++;
             if (!detectedTypes.includes(item.type)) {
                 detectedTypes.push(item.type);
@@ -202,7 +202,7 @@ function performDetection(content) {
         if (content.includes(item.word) && !qualifiedWords.has(item.word)) {
             const regex = new RegExp(escapeRegExp(item.word), 'g');
             processedContent = processedContent.replace(regex, 
-                `<span class="highlight highlight-b" data-word="${item.word}" data-desc="${item.desc}" data-type="${item.type}">${item.word}</span>`);
+                `<span class="highlight highlight-b" data-word="${escapeHtml(item.word)}" data-desc="${escapeHtml(item.desc)}" data-type="${escapeHtml(item.type)}">${item.word}</span>`);
             counts.b++;
             if (!detectedTypes.includes(item.type)) {
                 detectedTypes.push(item.type);
@@ -215,7 +215,7 @@ function performDetection(content) {
         if (content.includes(item.word) && !qualifiedWords.has(item.word)) {
             const regex = new RegExp(escapeRegExp(item.word), 'g');
             processedContent = processedContent.replace(regex, 
-                `<span class="highlight highlight-c" data-word="${item.word}" data-desc="${item.desc}" data-type="${item.type}">${item.word}</span>`);
+                `<span class="highlight highlight-c" data-word="${escapeHtml(item.word)}" data-desc="${escapeHtml(item.desc)}" data-type="${escapeHtml(item.type)}">${item.word}</span>`);
             counts.c++;
             if (!detectedTypes.includes(item.type)) {
                 detectedTypes.push(item.type);
@@ -238,6 +238,18 @@ function performDetection(content) {
 // 转义正则表达式特殊字符
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// HTML转义函数 - 新增，用于修复HTML属性显示问题
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
 // ==================== AI深度分析功能 ====================
