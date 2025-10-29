@@ -6,22 +6,32 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# 🔑 重要：这里需要您填写DeepSeek API密钥
+# 从环境变量获取API密钥
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
+DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+
 if not DEEPSEEK_API_KEY:
-    print("警告: DEEPSEEK_API_KEY 环境变量未设置")DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+    print("警告: DEEPSEEK_API_KEY 环境变量未设置")
 
 @app.route('/')
 def home():
     return jsonify({
-        "message": "法镜·商盾AI后端服务运行正常", 
+        "message": "法镜·商盾AI后端服务运行正常 - 版本2.0", 
         "status": "active",
-        "version": "2.0"
+        "version": "2.0",
+        "ai_enabled": bool(DEEPSEEK_API_KEY)
     })
 
 @app.route('/ai-check', methods=['POST'])
 def ai_check_ad():
     try:
+        # 检查API密钥
+        if not DEEPSEEK_API_KEY:
+            return jsonify({
+                "error": "AI服务未配置",
+                "message": "请配置DEEPSEEK_API_KEY环境变量"
+            }), 500
+            
         data = request.get_json()
         if not data or 'text' not in data:
             return jsonify({"error": "缺少文案内容"}), 400
@@ -48,7 +58,7 @@ def analyze_with_deepseek(ad_text):
         "Content-Type": "application/json"
     }
     
-    # 优化后的提示词 - 精准修改，不自由发挥
+    # 优化后的提示词
     system_prompt = """你是一个专业的广告合规检测AI专家。严格依据《广告法》、《互联网广告管理办法》、《反不正当竞争法》等法律法规，对广告文案进行深度分析。
 
 请按照以下要求进行分析：
@@ -73,8 +83,8 @@ def analyze_with_deepseek(ad_text):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"请精准分析以下广告文案的合规性，只修改核心问题：\n\n{ad_text}"}
         ],
-        "temperature": 0.2,  # 降低随机性，让回答更精准
-        "max_tokens": 1500   # 限制长度，避免冗长
+        "temperature": 0.2,
+        "max_tokens": 1500
     }
     
     try:
@@ -85,9 +95,9 @@ def analyze_with_deepseek(ad_text):
         return result["choices"][0]["message"]["content"]
         
     except requests.exceptions.RequestException as e:
-        return f"AI分析服务暂时不可用，请稍后重试。"
+        return f"AI分析服务暂时不可用，请稍后重试。错误: {str(e)}"
     except Exception as e:
-        return f"分析过程中出现错误，请稍后重试。"
+        return f"分析过程中出现错误: {str(e)}"
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
