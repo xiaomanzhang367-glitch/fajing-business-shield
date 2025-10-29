@@ -288,6 +288,17 @@ aiDetectBtn.addEventListener('click', async function() {
     }
 });
 
+// 格式化AI返回的文本
+function formatAIText(text) {
+    if (!text) return '';
+    return text
+        .replace(/\n/g, '<br>')
+        .replace(/(【.*?】)/g, '<strong>$1</strong>')
+        .replace(/(\d+\.)/g, '<br><strong>$1</strong>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // 处理 **粗体**
+        .replace(/\*(.*?)\*/g, '<em>$1</em>'); // 处理 *斜体*
+}
+
 // ==================== 资质审核功能 ====================
 // 我没有资质按钮
 noQualifyBtn.addEventListener('click', function() {
@@ -399,7 +410,7 @@ reportBtn.addEventListener('click', function() {
     }, 100);
 });
 
-// PDF报告生成函数（修复中文乱码 - 使用图片方式）
+// PDF报告生成函数（修复中文乱码 - 使用英文报告）
 function generatePDFReport(content) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -610,5 +621,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('法镜·商盾广告合规检测平台已加载完成');
     console.log(`本地词库: ${totalWords}条法规禁用词`);
-
 });
