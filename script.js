@@ -250,10 +250,13 @@ aiDetectBtn.addEventListener('click', async function() {
     
     aiLoading.style.display = 'block';
     aiDetectBtn.disabled = true;
+    aiResultContent.innerHTML = '';
     
     try {
-        // 🔑 重要：这里需要替换为您的实际Render后端URL
+        // 使用实际的后端服务URL
         const backendURL = 'https://fajing-backend.onrender.com/ai-check';
+        
+        console.log('发送AI分析请求到:', backendURL);
         
         const response = await fetch(backendURL, {
             method: 'POST',
@@ -264,6 +267,7 @@ aiDetectBtn.addEventListener('click', async function() {
         });
         
         const data = await response.json();
+        console.log('AI分析响应:', data);
         
         aiLoading.style.display = 'none';
         aiDetectBtn.disabled = false;
@@ -272,25 +276,17 @@ aiDetectBtn.addEventListener('click', async function() {
             aiResultContent.innerHTML = formatAIText(data.ai_analysis);
             aiAnalysisResult.style.display = 'block';
         } else {
-            aiResultContent.innerHTML = '<p style="color: #e74c3c;">AI分析暂时不可用，请稍后重试</p>';
+            aiResultContent.innerHTML = `<p style="color: #e74c3c;">AI分析失败: ${data.error || '未知错误'}</p>`;
             aiAnalysisResult.style.display = 'block';
         }
     } catch (error) {
         aiLoading.style.display = 'none';
         aiDetectBtn.disabled = false;
-        aiResultContent.innerHTML = '<p style="color: #e74c3c;">AI服务连接失败，请检查网络或稍后重试</p>';
+        aiResultContent.innerHTML = `<p style="color: #e74c3c;">AI服务连接失败: ${error.message}</p>`;
         aiAnalysisResult.style.display = 'block';
         console.error('AI分析请求失败:', error);
     }
 });
-
-// 格式化AI返回的文本
-function formatAIText(text) {
-    return text
-        .replace(/\n/g, '<br>')
-        .replace(/(【.*?】)/g, '<strong>$1</strong>')
-        .replace(/(\d+\.)/g, '<br><strong>$1</strong>');
-}
 
 // ==================== 资质审核功能 ====================
 // 我没有资质按钮
@@ -614,4 +610,5 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('法镜·商盾广告合规检测平台已加载完成');
     console.log(`本地词库: ${totalWords}条法规禁用词`);
+
 });
