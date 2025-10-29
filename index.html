@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>法镜·商盾 - 广告合规智能检测平台</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img id="logo-image" class="logo-image" src="logo.png" alt="法镜Logo" onerror="this.style.display='none'">
+                <div class="logo-text">
+                    <div class="logo">法镜·商盾</div>
+                    <div class="subtitle">广告合规智能检测平台</div>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">首页</a>
+                <a href="#" class="nav-item">检测工具</a>
+                <a href="#" class="nav-item">法律法规</a>
+            </nav>
+        </header>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">📝 广告文案输入</h2>
+                <textarea id="ad-content" placeholder="请输入您的广告文案...">我们的产品采用最顶尖的技术，能够100%解决您的问题，效果显著优于市场上其他产品。使用我们的服务，保证您在7天内看到明显效果！我们拥有国家级专利认证，是行业内的领导品牌。</textarea>
+                
+                <div class="button-group">
+                    <button id="detect-btn" class="btn-primary">🔍 基础检测</button>
+                    <button id="ai-detect-btn" class="btn-ai">🤖 AI深度分析</button>
+                    <button id="clear-btn" class="btn-secondary">🗑️ 清空内容</button>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item"><div class="color-box level-a"></div><span>A级违规（立即删除）</span></div>
+                    <div class="legend-item"><div class="color-box level-b"></div><span>B级需资质证明</span></div>
+                    <div class="legend-item"><div class="color-box level-c"></div><span>C级不当用法</span></div>
+                </div>
+
+                <div class="word-count">
+                    <small>本地词库：<span id="word-count">150+</span> 条法规禁用词 | AI增强：语义理解分析</small>
+                </div>
+
+                <!-- 敬请期待功能提示 -->
+                <div class="coming-soon">
+                    <small style="color: #999;">🔮 敬请期待：图片文字识别功能上线</small><br>
+                    <small style="color: #999;">📊 专利数据同步功能（模拟数据）</small>
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <h2 class="section-title">📊 检测结果</h2>
+                <div id="result-content" class="result-content">
+                    请点击检测按钮分析广告文案合规性...
+                </div>
+                
+                <div id="ai-analysis-result" class="ai-result-area" style="display: none;">
+                    <h4>🤖 AI深度分析结果</h4>
+                    <div id="ai-result-content"></div>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item stat-a"><div class="stat-count">0</div><div>A级违规</div></div>
+                    <div class="stat-item stat-b"><div class="stat-count">0</div><div>B级需资质</div></div>
+                    <div class="stat-item stat-c"><div class="stat-count">0</div><div>C级不当</div></div>
+                </div>
+
+                <div id="type-stats" class="type-stats"></div>
+                
+                <div class="loading" id="pdf-loading" style="display: none;">正在生成PDF报告，请稍候...</div>
+                <div class="loading" id="ai-loading" style="display: none;">AI正在深度分析，请稍候...</div>
+                
+                <button id="report-btn" class="btn-report">📄 生成合规报告 (PDF)</button>
+            </div>
+        </div>
+
+        <section class="knowledge-section">
+            <h2 class="section-title">📚 广告法规知识库</h2>
+            <div class="knowledge-cards">
+                <div class="knowledge-card">
+                    <h4>《广告法》第九条</h4>
+                    <p>广告不得使用"国家级"、"最高级"、"最佳"等绝对化用语。</p>
+                    <small>禁止使用绝对化用语，如：最、第一、顶级、最佳等</small>
+                </div>
+                <div class="knowledge-card">
+                    <h4>《广告法》第十一条</h4>
+                    <p>广告内容涉及的事项需要取得行政许可的，应当与许可的内容相符合。</p>
+                    <small>涉及专利、认证、资质等内容需提供相应证明</small>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>法镜·商盾 - 基于《广告法》《互联网广告管理办法》等法律法规构建 | 智能广告合规检测工具</p>
+            <p>© 2025 法镜·商盾 版权所有 | 让广告更合规，让营销更安心</p>
+        </footer>
+    </div>
+
+    <!-- 资质审核弹窗 - 已按需求修改 -->
+    <div id="qualification-modal" class="modal">
+        <div class="modal-content">
+            <h3>📋 资质证明提醒</h3>
+            <p>检测到需要资质证明的内容：</p>
+            <p id="modal-text" class="modal-text"></p>
+            <div class="modal-actions">
+                <button id="no-qualify-btn" class="btn-secondary">我没有资质</button>
+                <button id="has-qualify-btn" class="btn-primary">我有相关资质</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
