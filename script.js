@@ -134,7 +134,7 @@ const modalText = document.getElementById('modal-text');
 const noQualifyBtn = document.getElementById('no-qualify-btn');
 const hasQualifyBtn = document.getElementById('has-qualify-btn');
 
-// ==================== 基础检测功能 - 使用DOM操作 ====================
+// ==================== 基础检测功能 - 修复重复检测问题 ====================
 detectBtn.addEventListener('click', function() {
     const content = adContent.value;
     if (!content.trim()) {
@@ -149,64 +149,62 @@ detectBtn.addEventListener('click', function() {
     updateTypeStats(detectionResults.types);
 });
 
-// 全新的检测逻辑 - 使用DOM操作避免HTML属性显示问题
+// 修复后的检测逻辑 - 避免重复匹配
 function performDetection(content) {
     let counts = { a: 0, b: 0, c: 0 };
     let detectedTypes = [];
     let detectedWords = [];
     
+    // 创建一个数组来跟踪已匹配的位置，避免重叠
+    const matchedPositions = new Set();
+    
+    // 按词汇长度从长到短排序，优先匹配长词汇
+    const allViolations = [
+        ...violations.aLevel.map(item => ({...item, level: 'a'})),
+        ...violations.bLevel.map(item => ({...item, level: 'b'})),
+        ...violations.cLevel.map(item => ({...item, level: 'c'}))
+    ].sort((a, b) => b.word.length - a.word.length);
+    
     // 检测所有违规词汇
-    violations.aLevel.forEach(item => {
-        if (content.includes(item.word) && !qualifiedWords.has(item.word)) {
-            const matches = findAllMatches(content, item.word);
-            matches.forEach(match => {
+    allViolations.forEach(item => {
+        if (qualifiedWords.has(item.word)) return;
+        
+        let index = content.indexOf(item.word);
+        while (index !== -1) {
+            // 检查这个位置是否已经被匹配
+            let positionOverlap = false;
+            for (let i = index; i < index + item.word.length; i++) {
+                if (matchedPositions.has(i)) {
+                    positionOverlap = true;
+                    break;
+                }
+            }
+            
+            if (!positionOverlap) {
+                // 标记这些位置为已匹配
+                for (let i = index; i < index + item.word.length; i++) {
+                    matchedPositions.add(i);
+                }
+                
                 detectedWords.push({
                     word: item.word,
                     desc: item.desc,
                     type: item.type,
-                    level: 'a',
-                    index: match.index,
+                    level: item.level,
+                    index: index,
                     length: item.word.length
                 });
-            });
-            counts.a += matches.length;
-            if (!detectedTypes.includes(item.type)) detectedTypes.push(item.type);
-        }
-    });
-    
-    violations.bLevel.forEach(item => {
-        if (content.includes(item.word) && !qualifiedWords.has(item.word)) {
-            const matches = findAllMatches(content, item.word);
-            matches.forEach(match => {
-                detectedWords.push({
-                    word: item.word,
-                    desc: item.desc,
-                    type: item.type,
-                    level: 'b',
-                    index: match.index,
-                    length: item.word.length
-                });
-            });
-            counts.b += matches.length;
-            if (!detectedTypes.includes(item.type)) detectedTypes.push(item.type);
-        }
-    });
-    
-    violations.cLevel.forEach(item => {
-        if (content.includes(item.word) && !qualifiedWords.has(item.word)) {
-            const matches = findAllMatches(content, item.word);
-            matches.forEach(match => {
-                detectedWords.push({
-                    word: item.word,
-                    desc: item.desc,
-                    type: item.type,
-                    level: 'c',
-                    index: match.index,
-                    length: item.word.length
-                });
-            });
-            counts.c += matches.length;
-            if (!detectedTypes.includes(item.type)) detectedTypes.push(item.type);
+                
+                // 更新计数
+                if (item.level === 'a') counts.a++;
+                else if (item.level === 'b') counts.b++;
+                else if (item.level === 'c') counts.c++;
+                
+                if (!detectedTypes.includes(item.type)) detectedTypes.push(item.type);
+            }
+            
+            // 继续查找下一个匹配
+            index = content.indexOf(item.word, index + 1);
         }
     });
     
@@ -219,17 +217,6 @@ function performDetection(content) {
         types: detectedTypes,
         detectedWords: detectedWords
     };
-}
-
-// 查找所有匹配位置
-function findAllMatches(text, word) {
-    const matches = [];
-    let index = text.indexOf(word);
-    while (index !== -1) {
-        matches.push({ index: index });
-        index = text.indexOf(word, index + word.length);
-    }
-    return matches;
 }
 
 // 使用DOM操作显示结果
@@ -532,7 +519,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalWords = violations.aLevel.length + violations.bLevel.length + violations.cLevel.length;
     document.getElementById('word-count').textContent = totalWords + '+';
     
-    console.log('法镜·商盾广告合规检测平台已加载完成 - 最终版本');
+    console.log('法镜·商盾广告合规检测平台已加载完成 - 修复重复检测版本');
     console.log(`本地词库: ${totalWords}条法规禁用词`);
 });
-
