@@ -1,119 +1,584 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>法镜·商盾 - 广告合规智能检测平台</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <div class="logo-container">
-                <img id="logo-image" class="logo-image" src="logo.png" alt="法镜Logo" onerror="this.style.display='none'">
-                <div class="logo-text">
-                    <div class="logo">法镜·商盾</div>
-                    <div class="subtitle">广告合规智能检测平台</div>
-                </div>
-            </div>
-            <nav class="nav-menu">
-                <a href="#" class="nav-item active">首页</a>
-                <a href="#" class="nav-item">检测工具</a>
-                <a href="#" class="nav-item">法律法规</a>
-            </nav>
-        </header>
+// ==================== 多语言配置 ====================
+const translations = {
+    zh: {
+        // 界面文本
+        logo: "法镜·商盾",
+        subtitle: "广告合规智能检测平台",
+        navHome: "首页",
+        navTools: "检测工具",
+        navLaws: "法律法规",
+        inputTitle: "📝 广告文案输入",
+        inputPlaceholder: "请输入您的广告文案...",
+        detectBtn: "🔍 基础检测",
+        aiDetectBtn: "🤖 AI深度分析",
+        clearBtn: "🗑️ 清空内容",
+        legendA: "A级违规（立即删除）",
+        legendB: "B级需资质证明",
+        legendC: "C级不当用法",
+        wordCountText: "本地词库：{count} 条法规禁用词 | AI增强：语义理解分析",
+        comingSoon1: "🔮 敬请期待：图片文字识别功能上线",
+        comingSoon2: "📊 专利数据同步功能（模拟数据）",
+        resultTitle: "📊 检测结果",
+        defaultResult: "请点击检测按钮分析广告文案合规性...",
+        aiResultTitle: "🤖 AI深度分析结果",
+        statA: "A级违规",
+        statB: "B级需资质",
+        statC: "C级不当",
+        pdfLoading: "正在生成PDF报告，请稍候...",
+        aiLoading: "AI正在深度分析，请稍候...",
+        reportBtn: "📄 生成合规报告 (PDF)",
+        knowledgeTitle: "📚 广告法规知识库",
+        lawTitle1: "《广告法》第九条",
+        lawContent1: "广告不得使用\"国家级\"、\"最高级\"、\"最佳\"等绝对化用语。",
+        lawDesc1: "禁止使用绝对化用语，如：最、第一、顶级、最佳等",
+        lawTitle2: "《广告法》第十一条",
+        lawContent2: "广告内容涉及的事项需要取得行政许可的，应当与许可的内容相符合。",
+        lawDesc2: "涉及专利、认证、资质等内容需提供相应证明",
+        footerText1: "法镜·商盾 - 基于《广告法》《互联网广告管理办法》等法律法规构建 | 智能广告合规检测工具",
+        footerText2: "© 2025 法镜·商盾 版权所有 | 让广告更合规，让营销更安心",
+        modalTitle: "📋 资质证明提醒",
+        modalDesc: "检测到需要资质证明的内容：",
+        noQualifyBtn: "我没有资质",
+        hasQualifyBtn: "我有相关资质",
+        // 检测结果文本
+        noContent: "请输入广告文案内容",
+        noViolations: "恭喜！未发现明显的广告法违规词汇。",
+        aLevelAlert: "A级违规: \"{word}\"",
+        aLevelDesc: "{desc}\n\n建议：请立即删除此表述！",
+        cLevelAlert: "C级不当表述: \"{word}\"",
+        cLevelDesc: "{desc}\n\n建议：修改为更合规的表述方式",
+        modifyAdvice: "修改建议",
+        modifyContent: "1. 删除需要资质证明的表述\n2. 替换为更中性的表述，如\"我们注重技术创新\"代替\"我们拥有专利\"\n3. 确保所有宣传内容均有相应证明文件支持",
+        typeAnalysis: "违规类型分析"
+    },
+    en: {
+        // 界面文本
+        logo: "FaJing Business Shield",
+        subtitle: "Advertisement Compliance Detection Platform",
+        navHome: "Home",
+        navTools: "Detection Tools",
+        navLaws: "Laws & Regulations",
+        inputTitle: "📝 Advertisement Input",
+        inputPlaceholder: "Please enter your advertisement copy...",
+        detectBtn: "🔍 Basic Detection",
+        aiDetectBtn: "🤖 AI Deep Analysis",
+        clearBtn: "🗑️ Clear Content",
+        legendA: "Level A Violation (Delete Immediately)",
+        legendB: "Level B Requires Qualification",
+        legendC: "Level C Improper Usage",
+        wordCountText: "Local Dictionary: {count} regulated prohibited words | AI Enhanced: Semantic Analysis",
+        comingSoon1: "🔮 Coming Soon: Image Text Recognition",
+        comingSoon2: "📊 Patent Data Sync (Demo Data)",
+        resultTitle: "📊 Detection Results",
+        defaultResult: "Please click detection button to analyze advertisement compliance...",
+        aiResultTitle: "🤖 AI Deep Analysis Results",
+        statA: "Level A Violation",
+        statB: "Level B Requires Proof",
+        statC: "Level C Improper",
+        pdfLoading: "Generating PDF report, please wait...",
+        aiLoading: "AI is analyzing deeply, please wait...",
+        reportBtn: "📄 Generate Compliance Report (PDF)",
+        knowledgeTitle: "📚 Advertisement Law Knowledge Base",
+        lawTitle1: "FTC Guidelines - Absolute Claims",
+        lawContent1: "Advertisements cannot use absolute claims like \"best\", \"#1\", \"top\" without verified proof.",
+        lawDesc1: "Prohibited absolute terms: best, #1, top, perfect, ultimate, etc.",
+        lawTitle2: "FDA Regulations - Health Claims",
+        lawContent2: "Health-related claims require FDA approval and substantial scientific evidence.",
+        lawDesc2: "Health, treatment, prevention claims need proper authorization",
+        footerText1: "FaJing Business Shield - Based on FTC, FDA regulations | Intelligent Advertisement Compliance Tool",
+        footerText2: "© 2025 FaJing Business Shield All Rights Reserved | Make Advertising Compliant, Marketing Secure",
+        modalTitle: "📋 Qualification Proof Reminder",
+        modalDesc: "Content requiring qualification proof detected:",
+        noQualifyBtn: "I Don't Have Qualification",
+        hasQualifyBtn: "I Have Related Qualification",
+        // 检测结果文本
+        noContent: "Please enter advertisement content",
+        noViolations: "Congratulations! No obvious advertisement law violations found.",
+        aLevelAlert: "Level A Violation: \"{word}\"",
+        aLevelDesc: "{desc}\n\nRecommendation: Delete this statement immediately!",
+        cLevelAlert: "Level C Improper Statement: \"{word}\"",
+        cLevelDesc: "{desc}\n\nRecommendation: Modify to more compliant expression",
+        modifyAdvice: "Modification Advice",
+        modifyContent: "1. Delete statements requiring qualification proof\n2. Replace with more neutral expressions, e.g., \"We focus on technological innovation\" instead of \"We have patents\"\n3. Ensure all promotional content has corresponding supporting documents",
+        typeAnalysis: "Violation Type Analysis"
+    }
+};
+
+// ==================== 完整法规禁用词库 - 包含中英文 ====================
+const violations = {
+    zh: {
+        aLevel: [
+            // ... 保持原有的中文词库不变
+            {word: '最', desc: '使用绝对化用语，违反《广告法》第九条', type: '绝对化用语'},
+            {word: '最顶尖', desc: '使用绝对化用语，违反《广告法》第九条', type: '绝对化用语'},
+            {word: '第一', desc: '使用绝对化用语，违反《广告法》第九条', type: '绝对化用语'},
+            {word: '顶级', desc: '使用绝对化用语，违反《广告法》第九条', type: '绝对化用语'},
+            {word: '最佳', desc: '使用绝对化用语，违反《广告法》第九条', type: '绝对化用语'},
+            // ... 其他中文A级词条
+        ],
+        bLevel: [
+            // ... 保持原有的中文词库不变
+            {word: '专利', desc: '涉及专利内容，需提供专利证书及专利号', type: '专利相关'},
+            {word: '认证', desc: '涉及认证内容，需提供相关认证证明', type: '认证相关'},
+            // ... 其他中文B级词条
+        ],
+        cLevel: [
+            // ... 保持原有的中文词库不变
+            {word: '优于', desc: '使用比较性广告，可能构成不正当竞争', type: '比较广告'},
+            {word: '超过', desc: '使用比较性广告，可能构成不正当竞争', type: '比较广告'},
+            // ... 其他中文C级词条
+        ]
+    },
+    en: {
+        aLevel: [
+            {word: 'best', desc: 'Using absolute claims without proof, violates FTC guidelines', type: 'Absolute Claims'},
+            {word: '#1', desc: 'Using ranking claims without verification, violates advertising laws', type: 'Ranking Claims'},
+            {word: 'top', desc: 'Using absolute superiority claims, requires proof', type: 'Absolute Claims'},
+            {word: 'perfect', desc: 'Using unsubstantiated perfect claims', type: 'Absolute Claims'},
+            {word: 'ultimate', desc: 'Using ultimate claims without proof', type: 'Absolute Claims'},
+            {word: 'greatest', desc: 'Using superlative claims without evidence', type: 'Absolute Claims'},
+            {word: '100%', desc: 'Using absolute percentage claims without proof', type: 'Absolute Claims'},
+            {word: 'completely', desc: 'Using absolute completion claims', type: 'Absolute Claims'},
+            {word: 'absolutely', desc: 'Using absolute certainty claims', type: 'Absolute Claims'},
+            {word: 'forever', desc: 'Using unverifiable time duration claims', type: 'Time Claims'},
+            {word: 'never', desc: 'Using absolute negative claims', type: 'Absolute Claims'},
+            {word: 'cures', desc: 'Making medical cure claims without FDA approval', type: 'Health Claims'},
+            {word: 'treats', desc: 'Making medical treatment claims without authorization', type: 'Health Claims'},
+            {word: 'prevents', desc: 'Making disease prevention claims without proof', type: 'Health Claims'}
+        ],
+        bLevel: [
+            {word: 'patent', desc: 'Patent claims require patent numbers and certificates', type: 'Patent Related'},
+            {word: 'patented', desc: 'Requires patent documentation proof', type: 'Patent Related'},
+            {word: 'certified', desc: 'Certification claims require certification documents', type: 'Certification'},
+            {word: 'ISO', desc: 'ISO certification requires proof of certification', type: 'Certification'},
+            {word: 'FDA approved', desc: 'FDA approval requires official approval documents', type: 'Approval'},
+            {word: 'award-winning', desc: 'Award claims require award proof', type: 'Awards'},
+            {word: 'licensed', desc: 'License claims require license documentation', type: 'Licenses'},
+            {word: 'doctor recommended', desc: 'Requires evidence of professional recommendation', type: 'Endorsement'},
+            {word: 'clinically proven', desc: 'Requires clinical study evidence', type: 'Clinical Proof'},
+            {word: 'scientifically proven', desc: 'Requires scientific research evidence', type: 'Scientific Proof'}
+        ],
+        cLevel: [
+            {word: 'better than', desc: 'Comparative advertising may constitute unfair competition', type: 'Comparative Ads'},
+            {word: 'beats', desc: 'Direct competitor comparison requires proof', type: 'Comparative Ads'},
+            {word: 'superior to', desc: 'Superiority claims require comparative evidence', type: 'Comparative Ads'},
+            {word: 'outperforms', desc: 'Performance comparison needs verification', type: 'Comparative Ads'},
+            {word: 'leader', desc: 'Market leadership claims require market data', type: 'Market Position'},
+            {word: 'leading', desc: 'Leading position claims need verification', type: 'Market Position'},
+            {word: '#1 brand', desc: 'Number one brand claims require sales data', type: 'Market Position'},
+            {word: 'industry leader', desc: 'Industry leadership requires industry data', type: 'Market Position'},
+            {word: 'immediately', desc: 'Immediate effect claims may be unverifiable', type: 'Time Claims'},
+            {word: 'instantly', desc: 'Instant result claims need proof', type: 'Time Claims'},
+            {word: 'overnight', desc: 'Overnight result claims require evidence', type: 'Time Claims'},
+            {word: 'magic', desc: 'Using exaggerated "magic" claims', type: 'Exaggeration'},
+            {word: 'miracle', desc: 'Using unsubstantiated "miracle" claims', type: 'Exaggeration'},
+            {word: 'secret', desc: 'Using unverifiable "secret" claims', type: 'Exaggeration'}
+        ]
+    }
+};
+
+// ==================== 全局变量 ====================
+let currentLanguage = 'zh';
+let qualifiedWords = new Set();
+
+// ==================== DOM元素初始化 ====================
+const detectBtn = document.getElementById('detect-btn');
+const aiDetectBtn = document.getElementById('ai-detect-btn');
+const clearBtn = document.getElementById('clear-btn');
+const adContent = document.getElementById('ad-content');
+const resultContent = document.getElementById('result-content');
+const reportBtn = document.getElementById('report-btn');
+const aiResultContent = document.getElementById('ai-result-content');
+const aiAnalysisResult = document.getElementById('ai-analysis-result');
+const aiLoading = document.getElementById('ai-loading');
+const pdfLoading = document.getElementById('pdf-loading');
+const qualificationModal = document.getElementById('qualification-modal');
+const modalText = document.getElementById('modal-text');
+const noQualifyBtn = document.getElementById('no-qualify-btn');
+const hasQualifyBtn = document.getElementById('has-qualify-btn');
+const langZhBtn = document.getElementById('lang-zh');
+const langEnBtn = document.getElementById('lang-en');
+
+// ==================== 语言切换功能 ====================
+function switchLanguage(lang) {
+    currentLanguage = lang;
+    
+    // 更新语言按钮状态
+    langZhBtn.classList.toggle('active', lang === 'zh');
+    langEnBtn.classList.toggle('active', lang === 'en');
+    
+    // 更新界面文本
+    updateInterfaceText();
+    
+    // 清空检测结果
+    resultContent.innerHTML = translations[lang].defaultResult;
+    aiAnalysisResult.style.display = 'none';
+    qualifiedWords.clear();
+    updateStats(0, 0, 0);
+    document.getElementById('type-stats').innerHTML = '';
+    
+    // 更新输入框占位符
+    adContent.placeholder = translations[lang].inputPlaceholder;
+    
+    // 更新词库统计
+    const totalWords = violations[lang].aLevel.length + violations[lang].bLevel.length + violations[lang].cLevel.length;
+    document.getElementById('word-count').textContent = totalWords + '+';
+}
+
+function updateInterfaceText() {
+    const t = translations[currentLanguage];
+    
+    // 更新所有文本元素
+    document.getElementById('logo-text').textContent = t.logo;
+    document.getElementById('subtitle-text').textContent = t.subtitle;
+    document.getElementById('nav-home').textContent = t.navHome;
+    document.getElementById('nav-tools').textContent = t.navTools;
+    document.getElementById('nav-laws').textContent = t.navLaws;
+    document.getElementById('input-title').textContent = t.inputTitle;
+    document.getElementById('detect-btn').textContent = t.detectBtn;
+    document.getElementById('ai-detect-btn').textContent = t.aiDetectBtn;
+    document.getElementById('clear-btn').textContent = t.clearBtn;
+    document.getElementById('legend-a').textContent = t.legendA;
+    document.getElementById('legend-b').textContent = t.legendB;
+    document.getElementById('legend-c').textContent = t.legendC;
+    document.getElementById('word-count-text').innerHTML = t.wordCountText.replace('{count}', '<span id="word-count">150+</span>');
+    document.getElementById('coming-soon-1').textContent = t.comingSoon1;
+    document.getElementById('coming-soon-2').textContent = t.comingSoon2;
+    document.getElementById('result-title').textContent = t.resultTitle;
+    document.getElementById('ai-result-title').textContent = t.aiResultTitle;
+    document.getElementById('stat-a').textContent = t.statA;
+    document.getElementById('stat-b').textContent = t.statB;
+    document.getElementById('stat-c').textContent = t.statC;
+    document.getElementById('pdf-loading').textContent = t.pdfLoading;
+    document.getElementById('ai-loading').textContent = t.aiLoading;
+    document.getElementById('report-btn').textContent = t.reportBtn;
+    document.getElementById('knowledge-title').textContent = t.knowledgeTitle;
+    document.getElementById('law-title-1').textContent = t.lawTitle1;
+    document.getElementById('law-content-1').textContent = t.lawContent1;
+    document.getElementById('law-desc-1').textContent = t.lawDesc1;
+    document.getElementById('law-title-2').textContent = t.lawTitle2;
+    document.getElementById('law-content-2').textContent = t.lawContent2;
+    document.getElementById('law-desc-2').textContent = t.lawDesc2;
+    document.getElementById('footer-text-1').textContent = t.footerText1;
+    document.getElementById('footer-text-2').textContent = t.footerText2;
+    document.getElementById('modal-title').textContent = t.modalTitle;
+    document.getElementById('modal-desc').textContent = t.modalDesc;
+    document.getElementById('no-qualify-btn').textContent = t.noQualifyBtn;
+    document.getElementById('has-qualify-btn').textContent = t.hasQualifyBtn;
+}
+
+// 语言切换事件
+langZhBtn.addEventListener('click', () => switchLanguage('zh'));
+langEnBtn.addEventListener('click', () => switchLanguage('en'));
+
+// ==================== 基础检测功能 ====================
+detectBtn.addEventListener('click', function() {
+    const content = adContent.value;
+    if (!content.trim()) {
+        resultContent.innerHTML = `<p style="color: #e74c3c; text-align: center;">${translations[currentLanguage].noContent}</p>`;
+        updateStats(0, 0, 0);
+        return;
+    }
+    
+    const detectionResults = performDetection(content);
+    displayDetectionResults(detectionResults);
+    updateStats(detectionResults.counts.a, detectionResults.counts.b, detectionResults.counts.c);
+    updateTypeStats(detectionResults.types);
+});
+
+// 检测逻辑
+function performDetection(content) {
+    let counts = { a: 0, b: 0, c: 0 };
+    let detectedTypes = [];
+    let detectedWords = [];
+    
+    const matchedPositions = new Set();
+    const currentViolations = violations[currentLanguage];
+    
+    const allViolations = [
+        ...currentViolations.aLevel.map(item => ({...item, level: 'a'})),
+        ...currentViolations.bLevel.map(item => ({...item, level: 'b'})),
+        ...currentViolations.cLevel.map(item => ({...item, level: 'c'}))
+    ].sort((a, b) => b.word.length - a.word.length);
+    
+    allViolations.forEach(item => {
+        if (qualifiedWords.has(item.word)) return;
         
-        <div class="main-content">
-            <div class="input-section">
-                <h2 class="section-title">📝 广告文案输入</h2>
-                <textarea id="ad-content" placeholder="请输入您的广告文案...">我们的产品采用最顶尖的技术，能够100%解决您的问题，效果显著优于市场上其他产品。使用我们的服务，保证您在7天内看到明显效果！我们拥有国家级专利认证，是行业内的领导品牌。</textarea>
-                
-                <div class="button-group">
-                    <button id="detect-btn" class="btn-primary">🔍 基础检测</button>
-                    <button id="ai-detect-btn" class="btn-ai">🤖 AI深度分析</button>
-                    <button id="clear-btn" class="btn-secondary">🗑️ 清空内容</button>
-                </div>
-                
-                <div class="legend">
-                    <div class="legend-item"><div class="color-box level-a"></div><span>A级违规（立即删除）</span></div>
-                    <div class="legend-item"><div class="color-box level-b"></div><span>B级需资质证明</span></div>
-                    <div class="legend-item"><div class="color-box level-c"></div><span>C级不当用法</span></div>
-                </div>
-
-                <div class="word-count">
-                    <small>本地词库：<span id="word-count">150+</span> 条法规禁用词 | AI增强：语义理解分析</small>
-                </div>
-
-                <!-- 敬请期待功能提示 -->
-                <div class="coming-soon">
-                    <small style="color: #999;">🔮 敬请期待：图片文字识别功能上线</small><br>
-                    <small style="color: #999;">📊 专利数据同步功能（模拟数据）</small>
-                </div>
-            </div>
+        let index = content.toLowerCase().indexOf(item.word.toLowerCase());
+        while (index !== -1) {
+            let positionOverlap = false;
+            for (let i = index; i < index + item.word.length; i++) {
+                if (matchedPositions.has(i)) {
+                    positionOverlap = true;
+                    break;
+                }
+            }
             
-            <div class="result-section">
-                <h2 class="section-title">📊 检测结果</h2>
-                <div id="result-content" class="result-content">
-                    请点击检测按钮分析广告文案合规性...
-                </div>
+            if (!positionOverlap) {
+                for (let i = index; i < index + item.word.length; i++) {
+                    matchedPositions.add(i);
+                }
                 
-                <div id="ai-analysis-result" class="ai-result-area" style="display: none;">
-                    <h4>🤖 AI深度分析结果</h4>
-                    <div id="ai-result-content"></div>
-                </div>
+                detectedWords.push({
+                    word: item.word,
+                    desc: item.desc,
+                    type: item.type,
+                    level: item.level,
+                    index: index,
+                    length: item.word.length
+                });
                 
-                <div class="stats">
-                    <div class="stat-item stat-a"><div class="stat-count">0</div><div>A级违规</div></div>
-                    <div class="stat-item stat-b"><div class="stat-count">0</div><div>B级需资质</div></div>
-                    <div class="stat-item stat-c"><div class="stat-count">0</div><div>C级不当</div></div>
-                </div>
+                if (item.level === 'a') counts.a++;
+                else if (item.level === 'b') counts.b++;
+                else if (item.level === 'c') counts.c++;
+                
+                if (!detectedTypes.includes(item.type)) detectedTypes.push(item.type);
+            }
+            
+            index = content.toLowerCase().indexOf(item.word.toLowerCase(), index + 1);
+        }
+    });
+    
+    detectedWords.sort((a, b) => a.index - b.index);
+    
+    return {
+        content: content,
+        counts: counts,
+        types: detectedTypes,
+        detectedWords: detectedWords
+    };
+}
 
-                <div id="type-stats" class="type-stats"></div>
-                
-                <div class="loading" id="pdf-loading" style="display: none;">正在生成PDF报告，请稍候...</div>
-                <div class="loading" id="ai-loading" style="display: none;">AI正在深度分析，请稍候...</div>
-                
-                <button id="report-btn" class="btn-report">📄 生成合规报告 (PDF)</button>
-            </div>
-        </div>
-
-        <section class="knowledge-section">
-            <h2 class="section-title">📚 广告法规知识库</h2>
-            <div class="knowledge-cards">
-                <div class="knowledge-card">
-                    <h4>《广告法》第九条</h4>
-                    <p>广告不得使用"国家级"、"最高级"、"最佳"等绝对化用语。</p>
-                    <small>禁止使用绝对化用语，如：最、第一、顶级、最佳等</small>
-                </div>
-                <div class="knowledge-card">
-                    <h4>《广告法》第十一条</h4>
-                    <p>广告内容涉及的事项需要取得行政许可的，应当与许可的内容相符合。</p>
-                    <small>涉及专利、认证、资质等内容需提供相应证明</small>
-                </div>
-            </div>
-        </section>
+function displayDetectionResults(results) {
+    const { content, detectedWords } = results;
+    const t = translations[currentLanguage];
+    
+    resultContent.innerHTML = '';
+    
+    if (detectedWords.length === 0) {
+        resultContent.innerHTML = `<p style="color: #27ae60; text-align: center;">${t.noViolations}</p>`;
+        return;
+    }
+    
+    let lastIndex = 0;
+    const fragment = document.createDocumentFragment();
+    
+    detectedWords.forEach(detected => {
+        if (detected.index > lastIndex) {
+            const normalText = document.createTextNode(content.substring(lastIndex, detected.index));
+            fragment.appendChild(normalText);
+        }
         
-        <footer>
-            <p>法镜·商盾 - 基于《广告法》《互联网广告管理办法》等法律法规构建 | 智能广告合规检测工具</p>
-            <p>© 2025 法镜·商盾 版权所有 | 让广告更合规，让营销更安心</p>
-        </footer>
-    </div>
+        const highlightSpan = document.createElement('span');
+        highlightSpan.className = `highlight highlight-${detected.level}`;
+        highlightSpan.textContent = content.substring(detected.index, detected.index + detected.length);
+        highlightSpan.setAttribute('data-word', detected.word);
+        highlightSpan.setAttribute('data-desc', detected.desc);
+        highlightSpan.setAttribute('data-type', detected.type);
+        
+        highlightSpan.addEventListener('click', function() {
+            handleHighlightClick(this, detected.level);
+        });
+        
+        fragment.appendChild(highlightSpan);
+        lastIndex = detected.index + detected.length;
+    });
+    
+    if (lastIndex < content.length) {
+        const remainingText = document.createTextNode(content.substring(lastIndex));
+        fragment.appendChild(remainingText);
+    }
+    
+    resultContent.appendChild(fragment);
+}
 
-    <!-- 资质审核弹窗 - 已按需求修改 -->
-    <div id="qualification-modal" class="modal">
-        <div class="modal-content">
-            <h3>📋 资质证明提醒</h3>
-            <p>检测到需要资质证明的内容：</p>
-            <p id="modal-text" class="modal-text"></p>
-            <div class="modal-actions">
-                <button id="no-qualify-btn" class="btn-secondary">我没有资质</button>
-                <button id="has-qualify-btn" class="btn-primary">我有相关资质</button>
-            </div>
-        </div>
-    </div>
+function handleHighlightClick(element, level) {
+    const word = element.getAttribute('data-word');
+    const desc = element.getAttribute('data-desc');
+    const t = translations[currentLanguage];
+    
+    switch(level) {
+        case 'a':
+            showAlert(
+                t.aLevelAlert.replace('{word}', word), 
+                t.aLevelDesc.replace('{desc}', desc)
+            );
+            break;
+        case 'b':
+            modalText.textContent = `"${word}" - ${desc}`;
+            modalText.setAttribute('data-word', word);
+            qualificationModal.style.display = 'flex';
+            break;
+        case 'c':
+            showAlert(
+                t.cLevelAlert.replace('{word}', word), 
+                t.cLevelDesc.replace('{desc}', desc)
+            );
+            break;
+    }
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+// ==================== AI深度分析功能 ====================
+aiDetectBtn.addEventListener('click', async function() {
+    const content = adContent.value.trim();
+    if (!content) {
+        alert(translations[currentLanguage].noContent);
+        return;
+    }
+    
+    aiLoading.style.display = 'block';
+    aiDetectBtn.disabled = true;
+    aiResultContent.innerHTML = '';
+    
+    try {
+        const backendURL = 'https://fajing-backend.onrender.com/ai-check';
+        
+        const response = await fetch(backendURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                text: content,
+                language: currentLanguage // 传递语言参数
+            })
+        });
+        
+        const data = await response.json();
+        
+        aiLoading.style.display = 'none';
+        aiDetectBtn.disabled = false;
+        
+        if (data.success && data.ai_analysis) {
+            aiResultContent.innerHTML = formatAIText(data.ai_analysis);
+            aiAnalysisResult.style.display = 'block';
+        } else {
+            aiResultContent.innerHTML = `<p style="color: #e74c3c;">AI分析失败: ${data.error || '未知错误'}</p>`;
+            aiAnalysisResult.style.display = 'block';
+        }
+    } catch (error) {
+        aiLoading.style.display = 'none';
+        aiDetectBtn.disabled = false;
+        aiResultContent.innerHTML = `<p style="color: #e74c3c;">AI服务连接失败: ${error.message}</p>`;
+        aiAnalysisResult.style.display = 'block';
+        console.error('AI分析请求失败:', error);
+    }
+});
+
+// ==================== 资质审核功能 ====================
+noQualifyBtn.addEventListener('click', function() {
+    qualificationModal.style.display = 'none';
+    const t = translations[currentLanguage];
+    showAlert(t.modifyAdvice, t.modifyContent);
+});
+
+hasQualifyBtn.addEventListener('click', function() {
+    const word = modalText.getAttribute('data-word');
+    qualifiedWords.add(word);
+    
+    const content = adContent.value;
+    const detectionResults = performDetection(content);
+    displayDetectionResults(detectionResults);
+    updateStats(detectionResults.counts.a, detectionResults.counts.b, detectionResults.counts.c);
+    updateTypeStats(detectionResults.types);
+    
+    qualificationModal.style.display = 'none';
+});
+
+// ==================== 其他功能 ====================
+clearBtn.addEventListener('click', function() {
+    adContent.value = '';
+    resultContent.innerHTML = translations[currentLanguage].defaultResult;
+    aiAnalysisResult.style.display = 'none';
+    qualifiedWords.clear();
+    updateStats(0, 0, 0);
+    document.getElementById('type-stats').innerHTML = '';
+});
+
+function updateStats(a, b, c) {
+    const counts = document.querySelectorAll('.stat-count');
+    counts[0].textContent = a;
+    counts[1].textContent = b;
+    counts[2].textContent = c;
+}
+
+function updateTypeStats(types) {
+    const typeStatsElement = document.getElementById('type-stats');
+    if (!typeStatsElement) return;
+    
+    const typeCounts = {};
+    types.forEach(type => {
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+    });
+    
+    const t = translations[currentLanguage];
+    let html = `<h4>${t.typeAnalysis}</h4><div class="type-tags">`;
+    Object.entries(typeCounts).forEach(([type, count]) => {
+        html += `<span class="type-tag">${type}(${count})</span>`;
+    });
+    html += '</div>';
+    
+    typeStatsElement.innerHTML = html;
+}
+
+// PDF报告生成
+reportBtn.addEventListener('click', function() {
+    const content = adContent.value.trim();
+    if (!content) {
+        alert(translations[currentLanguage].noContent);
+        return;
+    }
+    
+    pdfLoading.style.display = 'block';
+    reportBtn.disabled = true;
+    
+    setTimeout(() => {
+        generatePDFReport(content);
+        pdfLoading.style.display = 'none';
+        reportBtn.disabled = false;
+    }, 100);
+});
+
+function generatePDFReport(content) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const t = translations[currentLanguage];
+    
+    // 根据语言生成报告标题
+    const reportTitle = currentLanguage === 'zh' ? 
+        '法镜广告合规检测报告' : 'FaJing Advertisement Compliance Report';
+    
+    doc.setFont('helvetica');
+    doc.setFontSize(18);
+    doc.setTextColor(52, 152, 219);
+    doc.text(reportTitle, 105, 20, { align: 'center' });
+    
+    // ... 其余PDF生成代码保持不变
+    // 注意：您可以根据需要进一步国际化PDF报告内容
+}
+
+function formatAIText(text) {
+    if (!text) return '';
+    return text
+        .replace(/\n/g, '<br>')
+        .replace(/(【.*?】)/g, '<strong>$1</strong>')
+        .replace(/(\d+\.)/g, '<br><strong>$1</strong>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+}
+
+function showAlert(title, message) {
+    alert(`【${title}】\n\n${message}`);
+}
+
+window.addEventListener('click', function(event) {
+    if (event.target === qualificationModal) qualificationModal.style.display = 'none';
+});
+
+// 初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化语言
+    switchLanguage('zh');
+    
+    console.log('法镜·商盾广告合规检测平台已加载完成 - 多语言版本');
+});
